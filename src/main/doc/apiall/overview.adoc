@@ -1,0 +1,33 @@
+= SpringBoot-Swagger2集成和保养APP示例
+
+
+[[_overview]]
+== Overview
+zhangS | 东软望海
+
+
+=== Version information
+[%hardbreaks]
+__Version__ : 1.0.0
+
+
+=== Contact information
+[%hardbreaks]
+__Contact__ : zhangS
+__Contact Email__ : zhangshan@viewhigh.com
+
+
+=== URI scheme
+[%hardbreaks]
+__Host__ : 127.0.0.1:9999
+__BasePath__ : /
+
+
+=== Tags
+
+* 保养App的api : Main Controller
+* 巡检App的api : Inspection Controller
+* 用户登录api : Login Controller
+
+
+

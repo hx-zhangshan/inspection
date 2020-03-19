@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.viewhigh.inspection.dao.SysUserMapper">
+  <resultMap id="BaseResultMap" type="com.viewhigh.inspection.entry.SysUser" >
+    
+   </resultMap>
+   
+    <select id="getUser" parameterType="com.viewhigh.inspection.bean.UserBo" resultType="java.lang.String" >
+      select user_name from sys_user where user_code = '${account}' and password = '${password}'
+    </select>
+    
+    
+    <select id="getPassWord" parameterType="com.viewhigh.inspection.bean.UserBo" resultType="java.lang.String" >
+      select user_code from sys_user where user_code = '${account}'
+    </select>
+
+ 
+  <select id="getSysPerm" parameterType="map" resultType="com.viewhigh.inspection.bean.UserDuty" >
+    select distinct case  when user_code is not null then '110' else '' end [key],
+  case  when user_code is not null then '保养' else '' end [value]
+  from equi_user_maintain a left join sys_user b on a.user_id=b.user_id
+    where user_code=#{empCode}
+    union
+     select distinct case  when user_code is not null then '120' else '' end [key],
+  case  when user_code is not null then '巡检' else '' end [value]
+  from equi_user_inspection a left join sys_user b on a.user_id=b.user_id
+    where user_code=#{empCode}
+--     之后再新添加 模块的权限  只需 union 查询即可，
+ </select>
+    
+</mapper>
