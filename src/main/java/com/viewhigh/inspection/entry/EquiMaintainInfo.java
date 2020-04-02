@@ -7,30 +7,35 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+import java.util.List;
+
+/**
+ * @author zhangS
+ * @Description 
+ * @date 2019-11-26 11:17
+ */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-public class EmpInfo {
-
+public class EquiMaintainInfo {
     /**
-     * 工号
+     * 资产卡号
      */
-    private String empCode;
+    private String equiArchNo;
     /**
-     * 姓名
+     * 资产名称
      */
-    private String empName;
+    private String detailId;
     /**
-     * 属性 工程师
-     * @JsonInclude 值为空就不进行转换
-     * 可在配置文件中 配置
-     *  //@JsonInclude(value=JsonInclude.Include.NON_NULL)
+     * 项目编码
+     */
+    private String xmCode;
+    /**maintainData
+     *
      */
     @JsonInclude(value=JsonInclude.Include.NON_NULL)
-    private String equiDuty;
-
-
+    private List<MaintainData> maintainDatas;
 
 }

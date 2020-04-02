@@ -1,6 +1,5 @@
 package com.viewhigh.inspection.serviceImp;
 
-import com.alibaba.druid.util.StringUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.viewhigh.inspection.dao.DetailDao;
 import com.viewhigh.inspection.entry.*;
@@ -21,11 +20,10 @@ import java.util.Map;
 public class DetailServiceImpl extends ServiceImpl<DetailDao, EquiMaintainDetailWork> implements IDetailService {
 
     @Override
-    public List<Dept_info> getMaintainDeptList(int isMaintain) {
-        if (isMaintain == 0) {
-            return this.baseMapper.getEquiCardNoGpDeptCode();
-        }
-        return this.baseMapper.getEquiCardNoGpDeptCode_copy();
+    public List<Map> getMaintainDeptList(int isMaintain, String empCode) {
+            //未处理  先通过 1，登陆人获取到 2，归口部门
+            return this.baseMapper.getEquiCardNoGpDeptCode(empCode,isMaintain);
+
     }
 
     @Override
@@ -45,53 +43,46 @@ public class DetailServiceImpl extends ServiceImpl<DetailDao, EquiMaintainDetail
     }
 
     @Override
-    public List<EquiCardInfo> getEquiCardListByDeptCode(String deptCode, int state, int isUnusual) {
+    public List<EquiCardInfo> getEquiCardListByDeptCode(String deptCode) {
         Map<String, String> map = new HashMap<>();
         map.put("deptCode", deptCode);
-        map.put("state", state + "");
-        map.put("isUnusual", isUnusual + "");
         return this.baseMapper.getEquiCardListByDeptCode(map);
     }
 
     @Override
-    public int recallDeptCode(String deptCode) {
+    public void recallDeptCode(String deptCode) {
 
-        return this.baseMapper.recallDeptCode(deptCode);
+        this.baseMapper.recallDeptCode(deptCode);
     }
     @Override
-    public List<Dept_info> getProjectList(String empCode){
+    public List<Map> getProjectList(int isMaintain, String empCode){
+
+        return this.baseMapper.getProjectList(empCode,isMaintain);
+    }
+    @Override
+    public void orderProject(String deptCode){
+        this.baseMapper.orderProject(deptCode);
+    }
+    @Override
+    public void recallProject(String deptCode) {
+
+        this.baseMapper.recallProject(deptCode);
+    }
+    @Override
+    public List<EquiCardInfo> getEquiCardListByDeptCode2( String idNo,String isDo) {
         Map<String, String> map = new HashMap<>();
-        if(!StringUtils.isEmpty(empCode)){
-            map.put("empCode", empCode);
-        }
-
-        return this.baseMapper.getProjectList(map);
-    }
-    @Override
-    public void orderProject(String deptCode,String empCode){
-        this.baseMapper.orderProject(deptCode,empCode);
-    }
-    @Override
-    public int recallProject(String deptCode,String empCode) {
-
-        return this.baseMapper.recallProject(deptCode,empCode);
-    }
-    @Override
-    public List<EquiCardInfo> getEquiCardListByDeptCode2(String deptCode, String empCode) {
-        Map<String, String> map = new HashMap<>();
-        map.put("deptCode", deptCode);
-        map.put("empCode", empCode);
+        map.put("idNo", idNo);
+        map.put("isDo", isDo);
         return this.baseMapper.getEquiCardListByDeptCode2(map);
     }
     @Override
-    public void endProject(String deptCode, String empCode){
+    public void endProject(String deptCode){
         Map<String, String> map = new HashMap<>();
-        map.put("deptCode", deptCode);
-        map.put("empCode", empCode);
+        map.put("idNo", deptCode);
         this.baseMapper.endProject(map);
     }
     @Override
-    public List<Dept_info> getProjectHistoryList(String empCode){
+    public List<Map> getProjectHistoryList(String empCode){
         return this.baseMapper.getProjectHistoryList(empCode);
     }
     @Override
@@ -100,7 +91,25 @@ public class DetailServiceImpl extends ServiceImpl<DetailDao, EquiMaintainDetail
     }
 
     @Override
-    public List<Dept_info> getMaintainDeptList_endWork(){
-        return this.baseMapper.getEquiCardNoGpDeptCode_endWork();
+    public List<Map> getMaintainDeptList_endWork(String empCode){
+        return this.baseMapper.getEquiCardNoGpDeptCode_endWork(empCode);
+    }
+    @Override
+    public List<Map> getMaintainContent(String equiArchNo,String detailId,String xmCode){
+        Map<String, String> map = new HashMap<>();
+        map.put("equiArchNo", equiArchNo);
+        map.put("detailId", detailId);
+        map.put("xmCode", xmCode);
+        return this.baseMapper.getMaintainContent(map);
+    }
+    @Override
+    public void insertMaintainInfo(EquiMaintainInfo equiMaintainInfo){
+        //先查询是否有值 在equi_inspection_work_card中 无插入 有更新
+//        Map<String, String> map = new HashMap<>();
+//        map.put("equiArchNo", equiMaintainInfo.getEquiArchNo());
+//        map.put("detailId", equiMaintainInfo.getDetailId());
+//        int haveOne=this.baseMapper.getEquiWorkCardByIdAndEqNo(map);
+        this.baseMapper.insertMaintainInfo(equiMaintainInfo);
+
     }
 }

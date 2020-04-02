@@ -19,12 +19,7 @@
     select distinct case  when user_code is not null then '110' else '' end [key],
   case  when user_code is not null then '保养' else '' end [value]
   from equi_user_maintain a left join sys_user b on a.user_id=b.user_id
-    where user_code=#{empCode}
-    union
-     select distinct case  when user_code is not null then '120' else '' end [key],
-  case  when user_code is not null then '巡检' else '' end [value]
-  from equi_user_inspection a left join sys_user b on a.user_id=b.user_id
-    where user_code=#{empCode}
+    where user_code=#{param1}
 --     之后再新添加 模块的权限  只需 union 查询即可，
  </select>
     

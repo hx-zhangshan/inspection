@@ -14,20 +14,22 @@ import java.util.Map;
  */
 public interface DetailDao extends BaseMapper<EquiMaintainDetailWork> {
 
-    List<Dept_info> getEquiCardNoGpDeptCode_endWork();
-    List<Dept_info> getEquiCardNoGpDeptCode();
-    List<Dept_info> getEquiCardNoGpDeptCode_copy();
+    List<Map> getEquiCardNoGpDeptCode_endWork(String empCode);
+    List<Map> getEquiCardNoGpDeptCode(String empCode,int isMaintain);
     List<EmpInfo> getMaintainEmpList(String empCode);
     //saveMaintainEmpCode
     void saveMaintainEmpCode(String deptCode,String empCode);
     List<EmpInfo> isHeadEmpCode(String empCode);
     List<EquiCardInfo> getEquiCardListByDeptCode(Map<String,String> map);
-    int recallDeptCode(String deptCode);
-    int recallProject(String deptCode,String empCode);
-    List<Dept_info> getProjectList(Map<String,String> map);
-    void orderProject(String deptCode,String empCode);
     List<EquiCardInfo> getEquiCardListByDeptCode2(Map<String,String> map);
+    void recallDeptCode(String deptCode);
+    void recallProject(String deptCode);
+    List<Map> getProjectList(String empCode,int isMaintain);
+    void orderProject(String deptCode);
     void endProject(Map<String,String> map);
-    List<Dept_info> getProjectHistoryList(String empCode);
+    List<Map> getProjectHistoryList(String empCode);
     StatusDetail getMaintainState(String deptCode);
+    List<Map> getMaintainContent(Map<String,String> map);
+    void insertMaintainInfo(EquiMaintainInfo equiMaintainInfo);
+    int getEquiWorkCardByIdAndEqNo(Map<String,String> map);
 }

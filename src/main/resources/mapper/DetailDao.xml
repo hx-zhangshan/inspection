@@ -9,24 +9,30 @@
     <sql id="Base_Column_List">
         detail_id as detailId, main_id, equi_arch_no, state, inspection_man,remarks,maintain_self,maintain_way
     </sql>
-    <select id="getEquiCardNoGpDeptCode_endWork" resultType="com.viewhigh.inspection.entry.Dept_info">
-      select distinct at_dept as dept_code,c.dept_name from equi_maintain_detail_work a left join equi_card b
-      on a.equi_arch_no=b.equi_arch_no
-      left join sys_dept c on c.dept_code=b.at_dept
-      where a.state!='0' and a.state!='1'
-
+    <select id="getEquiCardNoGpDeptCode_endWork" resultType="java.util.Map" parameterType="map">
+       select emw.id idNo,xm_code,xm_name,count(ec.equi_arch_no) cardAmount from sys_user su
+        left join sys_emp se on se.emp_code=su.emp_code
+        left join equi_inspection_main_work emw on emw.att_code=left(se.dept_code,6)
+        left join equi_inspection_detail_work edw on edw.main_id=emw.id
+        left join equi_card ec on ec.equi_code=edw.equi_code
+        where emw.state='3'
+        and user_code=#{empCode}
+        GROUP BY emw.id,xm_code,xm_name
     </select>
-    <select id="getEquiCardNoGpDeptCode" resultType="com.viewhigh.inspection.entry.Dept_info">
-      select distinct at_dept as dept_code,c.dept_name from equi_maintain_detail_work a left join equi_card b
-      on a.equi_arch_no=b.equi_arch_no
-      left join sys_dept c on c.dept_code=b.at_dept
-      where a.state='0'
-    </select>
-    <select id="getEquiCardNoGpDeptCode_copy" resultType="com.viewhigh.inspection.entry.Dept_info">
-      select distinct at_dept as dept_code,c.dept_name from equi_maintain_detail_work a left join equi_card b
-      on a.equi_arch_no=b.equi_arch_no
-      left join sys_dept c on c.dept_code=b.at_dept
-      where a.state='1'
+    <select id="getEquiCardNoGpDeptCode" resultType="java.util.Map" parameterType="map">
+        select emw.id idNo,xm_code,xm_name,emw.state,count(ec.equi_arch_no) cardAmount from sys_user su
+        left join sys_emp se on se.emp_code=su.emp_code
+        left join equi_inspection_main_work emw on emw.att_code=left(se.dept_code,6)
+        left join equi_inspection_detail_work edw on edw.main_id=emw.id
+        left join equi_card ec on ec.equi_code=edw.equi_code
+        where user_code=#{empCode}
+        <if test="isMaintain==0">
+            and emw.state=0
+        </if>
+        <if test="isMaintain!=0">
+            and (emw.state=1 or emw.state=2)
+        </if>
+        GROUP BY emw.id,xm_code,xm_name,emw.state
     </select>
     <select id="getMaintainEmpList" resultType="com.viewhigh.inspection.entry.EmpInfo" parameterType="map">
          select distinct b.emp_code,b.emp_name from equi_user_maintain a
@@ -47,102 +53,133 @@
 
     </select>
     <select id="getEquiCardListByDeptCode" resultType="com.viewhigh.inspection.entry.EquiCardInfo" parameterType="map">
-        select a.equi_arch_no,ed.equi_name,ed.equi_spec,ed.equi_model,ed.prim_money,a.remarks from
-        equi_maintain_detail_work a
-        left join equi_card ed on a.equi_arch_no=ed.equi_arch_no
-        where ed.at_dept=#{deptCode}
-        <if test="state==0">
-            AND a.state=0
-        </if>
-        <if test="state!=0">
-            AND a.state!=0
-        </if>
-        <if test="isUnusual==0">
-            AND remarks is null
-        </if>
-        <if test="isUnusual!=0">
-            AND remarks is not null
-        </if>
+       select ed.equi_arch_no,ed.equi_name,ed.equi_spec,ed.equi_model,ed.prim_money,sd.dept_name from
+        equi_inspection_main_work a
+        left join equi_inspection_detail_work edw on a.id=edw.main_id
+        left join equi_card ed on edw.equi_code=ed.equi_code
+		left join sys_dept sd on sd.dept_code=ed.at_dept
+        where a.id=#{deptCode}
+
     </select>
-    <select id="recallDeptCode" parameterType="map" resultType="int">
-        if exists (select 1 from equi_maintain_detail_work ew
-        left join equi_card ec on ec.equi_arch_no=ew.equi_arch_no
-        where ec.at_dept=#{param1} and ew.state!='1' )
-        begin
-          select 0
-        end
-        else
-        begin
-           update equi_maintain_detail_work set inspection_man=null ,state=0
-            from equi_maintain_detail_work ew
-            left join equi_card ec on ec.equi_arch_no=ew.equi_arch_no
-            where ec.at_dept=#{param1}
-            select 1
-        end
-    </select>
-    <select id="getProjectList" resultType="com.viewhigh.inspection.entry.Dept_info" parameterType="map">
-        select distinct at_dept as dept_code,c.dept_name,
-        case a.state when 1 then 0 else 1 end state
-        from equi_maintain_detail_work a left join equi_card b
-        on a.equi_arch_no=b.equi_arch_no
-        left join sys_dept c on c.dept_code=b.at_dept
-        where a.state!='0'
-        <if test="empCode!=null">
-            and inspection_man=#{empCode}
+    <!--查看 是否有work——card表中是否有数据 有的话 就是已经处理-->
+    <select id="getEquiCardListByDeptCode2" resultType="com.viewhigh.inspection.entry.EquiCardInfo" parameterType="map">
+        select DISTINCT ed.equi_arch_no,ed.equi_name,ed.equi_spec,ed.equi_model,ed.prim_money,sd.dept_name,edw.detail_id from
+        equi_inspection_main_work a
+        left join equi_inspection_detail_work edw on a.id=edw.main_id
+        left join equi_card ed on edw.equi_code=ed.equi_code
+        left join sys_dept sd on sd.dept_code=ed.at_dept
+        where a.id=#{idNo}
+        <if test="isDo==0">
+            and (0=(select count(1) from equi_inspection_work_card ewc where edw.detail_id=ewc.main_id) )
         </if>
+        <if test="isDo!=0">
+            and (0!=(select count(1) from equi_inspection_work_card ewc where edw.detail_id=ewc.main_id) )
+        </if>
+
+    </select>
+    <update id="recallDeptCode" parameterType="map">
+           update equi_inspection_main_work set inspection_man=null ,state=0
+            from equi_inspection_main_work ew
+            where id=#{param1}
+    </update>
+    <select id="getProjectList" resultType="java.util.Map" parameterType="map">
+        select emw.id idNo,xm_code,xm_name,emw.state,count(ec.equi_arch_no) cardAmount from  equi_inspection_main_work emw
+        left join equi_inspection_detail_work edw on edw.main_id=emw.id
+        left join equi_card ec on ec.equi_code=edw.equi_code
+        where inspection_man=#{empCode}
+        <if test="isMaintain==0">
+            and emw.state=1
+        </if>
+        <if test="isMaintain!=0">
+            and emw.state=2
+        </if>
+        GROUP BY emw.id,xm_code,xm_name,emw.state
     </select>
     <!--更新整个科室的 巡检工程师-->
     <update id="saveMaintainEmpCode" parameterType="map">
-        update equi_maintain_detail_work set inspection_man=#{param2} ,state=1
-        from equi_maintain_detail_work ew
-        left join equi_card ec on ec.equi_arch_no=ew.equi_arch_no
-        where ec.at_dept=#{param1}
+        update ew set ew.inspection_man=#{param2} ,ew.state=1
+        from equi_inspection_main_work ew
+        where ew.id=#{param1}
+
     </update>
     <update id="orderProject" parameterType="map">
-        update equi_maintain_detail_work set state=2
-        from equi_maintain_detail_work ew
-        left join equi_card ec on ec.equi_arch_no=ew.equi_arch_no
-        where ec.at_dept=#{param1} and inspection_man=#{param2}
+        update ew set state='2'
+        from equi_inspection_main_work ew
+        where ew.id=#{param1}
     </update>
-    <select id="recallProject" parameterType="map" resultType="int">
-        if exists (select 1 from equi_maintain_detail_work ew
-        left join equi_card ec on ec.equi_arch_no=ew.equi_arch_no
-        where ec.at_dept=#{param1} and ew.state!='1' and inspection_man=#{param2})
-        begin
-          select 0
-        end
-        else
-        begin
-           update equi_maintain_detail_work set inspection_man=null ,state=0
-            from equi_maintain_detail_work ew
-            left join equi_card ec on ec.equi_arch_no=ew.equi_arch_no
-            where ec.at_dept=#{param1} and inspection_man=#{param2}
-            select 1
-        end
+    <select id="recallProject" parameterType="map">
+       update ew set state='0',inspection_man=null
+        from equi_inspection_main_work ew
+        where ew.id=#{param1}
     </select>
-    <select id="getEquiCardListByDeptCode2" resultType="com.viewhigh.inspection.entry.EquiCardInfo" parameterType="map">
-        select a.equi_arch_no,ed.equi_name,ed.equi_spec,ed.equi_model,ed.prim_money,a.maintain_self,maintain_way,a.state
-        from equi_maintain_detail_work a
-        left join equi_card ed on a.equi_arch_no=ed.equi_arch_no
-        where  ed.at_dept=#{deptCode} and inspection_man=#{empCode}
+    <select id="getEquiWorkCardByIdAndEqNo" parameterType="map" resultType="int">
+      select count(1) from equi_inspection_work_card where equi_arch_no=#{equiArchNo}
+      and main_id=#{mainId}
+    </select>
+<!--  不存在 就直接插入 有的话就更新-->
+    <insert id="insertMaintainInfo" parameterType="com.viewhigh.inspection.entry.EquiMaintainInfo" >
 
-    </select>
+            delete from equi_inspection_work_card where equi_arch_no=#{equiArchNo} and main_id=#{detailId}
+
+                insert into equi_inspection_work_card(equi_arch_no,main_id,info_code,info_data)
+                <foreach collection="maintainDatas" item="maintainData" index="index" separator="union all">
+                    select #{equiArchNo,jdbcType=VARCHAR},
+                    #{detailId,jdbcType=VARCHAR},
+                    #{maintainData.infoCode,jdbcType=VARCHAR},
+                    #{maintainData.infoData,jdbcType=VARCHAR}
+                </foreach>
+
+    </insert>
     <update id="endProject" parameterType="map">
-       update ew set ew.state=3
-            from equi_maintain_detail_work ew
-            left join equi_card ec on ec.equi_arch_no=ew.equi_arch_no
-            where ec.at_dept=#{deptCode} and inspection_man=#{empCode} and ew.state=2
+            update ew set ew.state=3
+            from equi_inspection_main_work ew
+            where ew.id=#{idNo}
     </update>
-    <select id="getProjectHistoryList" parameterType="map" resultType="com.viewhigh.inspection.entry.Dept_info">
-      select distinct at_dept as dept_code,c.dept_name from equi_maintain_detail_work a left join equi_card b
-      on a.equi_arch_no=b.equi_arch_no
-      left join sys_dept c on c.dept_code=b.at_dept
-      where a.state='3' and inspection_man=#{empCode}
+    <select id="getProjectHistoryList" parameterType="map" resultType="java.util.Map">
+        select emw.id idNo,xm_code,xm_name,count(ec.equi_arch_no) cardAmount from  equi_inspection_main_work emw
+        left join equi_inspection_detail_work edw on edw.main_id=emw.id
+        left join equi_card ec on ec.equi_code=edw.equi_code
+        where emw.state='3'
+		and inspection_man=#{empCode}
+		GROUP BY emw.id,xm_code,xm_name
     </select>
     <select id="getMaintainState" parameterType="map" resultType="com.viewhigh.inspection.entry.StatusDetail">
-      select distinct a.state  from equi_maintain_detail_work a left join equi_card b
-      on a.equi_arch_no=b.equi_arch_no
-      left join sys_dept c on c.dept_code=b.at_dept
-      where at_dept=#{deptCode}
+      select distinct a.state  from equi_inspection_main_work a
+      where id=#{deptCode}
+    </select>
+    <select id="getMaintainContent" parameterType="map" resultType="java.util.Map">
+        DECLARE @equi_arch_no VARCHAR(20)
+        DECLARE @detail_id VARCHAR(20)
+        DECLARE @xm_code VARCHAR(20)
+
+
+
+        set @equi_arch_no=#{equiArchNo}
+        set @detail_id=#{detailId}
+        set @xm_code=#{xmCode}
+
+        if not EXISTS( select * from equi_inspection_work_card where equi_arch_no=@equi_arch_no and main_id=@detail_id)
+            begin
+                -- 	构造一个  1,先找出 项目 对应的保养项
+                select @equi_arch_no equi_arch_no,@detail_id main_id,
+                info_code,'' info_data into #equi_inspection_work_card from equi_baoyang_info_detail   where by_code=@xm_code
+
+                insert into #equi_inspection_work_card values(@equi_arch_no,@detail_id,'AAAA','')
+                insert into #equi_inspection_work_card values(@equi_arch_no,@detail_id,'BBBB','')
+                insert into #equi_inspection_work_card values(@equi_arch_no,@detail_id,'CCCC','')
+                insert into #equi_inspection_work_card values(@equi_arch_no,@detail_id,'DDDD','')
+
+                select ec.info_code,info_name,info_data from #equi_inspection_work_card ec
+                    left join equi_baoyang_info ed on ed.info_code=ec.info_code
+
+                drop table #equi_inspection_work_card
+
+            end
+        else
+            begin
+                    select ec.info_code,info_name,info_data from equi_inspection_work_card ec
+                    left join equi_baoyang_info ed on ed.info_code=ec.info_code
+                    where equi_arch_no=@equi_arch_no and main_id=@detail_id
+            end
     </select>
 </mapper>
