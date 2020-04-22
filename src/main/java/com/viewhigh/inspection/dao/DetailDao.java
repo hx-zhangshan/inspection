@@ -13,11 +13,12 @@ import java.util.Map;
  * @date 2019-11-14 15:20
  */
 public interface DetailDao extends BaseMapper<EquiMaintainDetailWork> {
-
+    List<String> getFileNames(String equiArchNo,String detailId);
+    void saveFilePath(String equiArchNo,String detailId,String filePath);
     List<Map> getEquiCardNoGpDeptCode_endWork(String empCode);
     List<Map> getEquiCardNoGpDeptCode(String empCode,int isMaintain);
     List<EmpInfo> getMaintainEmpList(String empCode);
-    //saveMaintainEmpCode
+    //saveMaintainEmpCode saveFilePath
     void saveMaintainEmpCode(String deptCode,String empCode);
     List<EmpInfo> isHeadEmpCode(String empCode);
     List<EquiCardInfo> getEquiCardListByDeptCode(Map<String,String> map);

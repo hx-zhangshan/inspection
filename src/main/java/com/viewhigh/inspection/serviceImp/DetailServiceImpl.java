@@ -7,6 +7,7 @@ import com.viewhigh.inspection.service.IDetailService;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +19,24 @@ import java.util.Map;
  */
 @Service
 public class DetailServiceImpl extends ServiceImpl<DetailDao, EquiMaintainDetailWork> implements IDetailService {
+
+    @Override
+    public List<String> getFileNames(String equiArchNo, String detailId) {
+         List<String> fileNames = this.baseMapper.getFileNames(equiArchNo, detailId);
+         List<String> nlist=new LinkedList<>();
+        fileNames.forEach(e->{
+            String s = e.split("\\\\")[1];
+            nlist.add(s);
+        });
+
+        return nlist;
+    }
+
+    @Override
+    public void saveFilePath(String equiArchNo,String detailId,String filePath) {
+
+        this.baseMapper.saveFilePath(equiArchNo,detailId,filePath);
+    }
 
     @Override
     public List<Map> getMaintainDeptList(int isMaintain, String empCode) {

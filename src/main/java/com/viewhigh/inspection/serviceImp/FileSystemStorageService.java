@@ -48,7 +48,8 @@ public class FileSystemStorageService implements StorageService {
 			}
 			//设置新的文件名字
 			Long milliSecond = LocalDateTime.now().toInstant(ZoneOffset.of("+8")).toEpochMilli();
-			String newName=milliSecond+filename;
+//			String newName=milliSecond+filename;
+			String newName=filename;
 			try (InputStream inputStream = file.getInputStream()) {
 				Files.copy(inputStream, this.rootLocation.resolve(newName),
 					StandardCopyOption.REPLACE_EXISTING);

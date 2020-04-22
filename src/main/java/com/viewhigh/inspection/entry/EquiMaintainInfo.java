@@ -20,6 +20,8 @@ import java.util.List;
 @AllArgsConstructor
 @Accessors(chain = true)
 public class EquiMaintainInfo {
+
+//    private static final long serialVersionUID = 1L;
     /**
      * 资产卡号
      */

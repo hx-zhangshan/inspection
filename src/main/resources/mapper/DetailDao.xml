@@ -169,7 +169,7 @@
                 insert into #equi_inspection_work_card values(@equi_arch_no,@detail_id,'CCCC','')
                 insert into #equi_inspection_work_card values(@equi_arch_no,@detail_id,'DDDD','')
 
-                select ec.info_code,info_name,info_data from #equi_inspection_work_card ec
+                select ec.info_code infoCode,info_name infoName,info_data infoData from #equi_inspection_work_card ec
                     left join equi_baoyang_info ed on ed.info_code=ec.info_code
 
                 drop table #equi_inspection_work_card
@@ -177,9 +177,26 @@
             end
         else
             begin
-                    select ec.info_code,info_name,info_data from equi_inspection_work_card ec
+                    select ec.info_code infoCode,info_name infoName,info_data infoData from equi_inspection_work_card ec
                     left join equi_baoyang_info ed on ed.info_code=ec.info_code
                     where equi_arch_no=@equi_arch_no and main_id=@detail_id
             end
+    </select>
+    <insert id="saveFilePath" parameterType="map">
+    -- 删除 旧的mp3 保留一条新的mp3文件
+        DECLARE @str VARCHAR(200)
+        set @str=#{filePath}
+        if CharIndex('mp3',@str,0)>0
+        begin
+            delete from equi_inspection_file_path  where equi_arch_no=#{equiArchNo}
+            and main_id=#{detailId} and CharIndex('mp3',file_path,0)>0
+        end
+
+        insert into equi_inspection_file_path(equi_arch_no,main_id,file_path)
+        values(#{equiArchNo},#{detailId},#{filePath})
+    </insert>
+    <select id="getFileNames" parameterType="map" resultType="string">
+        select file_path filePath from equi_inspection_file_path where
+        equi_arch_no=#{equiArchNo} and main_id=#{detailId}
     </select>
 </mapper>

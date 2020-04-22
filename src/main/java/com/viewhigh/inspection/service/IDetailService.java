@@ -13,6 +13,9 @@ import java.util.Map;
  * @date 2019-11-14 11:48
  */
 public interface IDetailService extends IService<EquiMaintainDetailWork> {
+    List<String> getFileNames(String equiArchNo,String detailId);
+
+    void saveFilePath(String equiArchNo,String detailId,String filePath);
     List<Map> getMaintainDeptList(int isMaintain, String empCode);
     List<EmpInfo> getMaintainEmpList(String empCode);
     void saveMaintainEmpCode(String deptCode,String empCode);

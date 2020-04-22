@@ -1,10 +1,12 @@
 package com.viewhigh.inspection.controller;
 
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.viewhigh.inspection.bean.InspectionResp;
 import com.viewhigh.inspection.bean.RepEnum;
 import com.viewhigh.inspection.bean.UserDuty;
-import com.viewhigh.inspection.entry.*;
+import com.viewhigh.inspection.entry.EmpInfo;
+import com.viewhigh.inspection.entry.EquiCardInfo;
+import com.viewhigh.inspection.entry.EquiMaintainInfo;
+import com.viewhigh.inspection.entry.StatusDetail;
 import com.viewhigh.inspection.exception.CommonException;
 import com.viewhigh.inspection.service.IDetailService;
 import com.viewhigh.inspection.service.IMainService;
@@ -39,7 +41,23 @@ public class MainController {
 
     @Autowired
     StorageService storageService;
-
+    /**
+     * 文件加载  从equi_inspection_file_path 中 返回文件名字
+     * @param
+     * @return
+     */
+    @PostMapping("/getFileNames")
+    @ApiOperation(value = "获取文件列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "detailId", value = "附表中的主键", required = true),
+            @ApiImplicitParam(name = "equiArchNo", value = "资产卡号", required = true)
+    })
+    @ApiResponse(code = 200, response = InspectionResp.class, message = "固定返回模型，json字符串表现形式；")
+    public Map<String, Object> getFileNames( @RequestParam("equiArchNo") String equiArchNo,
+                                                   @RequestParam("detailId") String detailId ) {
+        List<String> fileNames = detailService.getFileNames(equiArchNo, detailId);
+        return InspectionResp.getMap(fileNames, RepEnum.REP_OK);
+    }
     /**
      * 文件上传
      * @param file
@@ -48,25 +66,23 @@ public class MainController {
     @PostMapping("/uploadFile")
     @ApiOperation(value = "文件上传")
     @ApiImplicitParams({
-//            @ApiImplicitParam(name = "files", value = "文件", required = true),
+            @ApiImplicitParam(name = "detailId", value = "附表中的主键", required = true),
             @ApiImplicitParam(name = "equiArchNo", value = "资产卡号", required = true)
     })
     @ApiResponse(code = 200, response = InspectionResp.class, message = "固定返回模型，json字符串表现形式；")
-    public Map<String, Object> handleFileUpload_T( MultipartFile[] file,@RequestParam("equiArchNo") String equiArchNo ) throws IOException {
-        //修改文件名称
-        StringBuffer names=new StringBuffer("");
+    public Map<String, Object> handleFileUpload_T( MultipartFile[] file,@RequestParam("equiArchNo") String equiArchNo,
+                                                   @RequestParam("detailId") String detailId ) throws IOException {
         //存文件 到系统 文件夹下 upload-dir
         for (MultipartFile fileInfo:file){
             String name = storageService.store(fileInfo);
-            names.append(name);
-            names.append(";");
+            detailService.saveFilePath(equiArchNo,detailId,name);
         }
 
         //生成 特定的文件名 和路径存在数据库
-        UpdateWrapper<EquiMaintainDetailWork> queryWrapper = new UpdateWrapper<>();
-        queryWrapper.lambda().eq(EquiMaintainDetailWork::getEquiArchNo, equiArchNo);
-        EquiMaintainDetailWork equiMaintainDetailWork = new EquiMaintainDetailWork().setFilePath(names.toString());
-        detailService.update(equiMaintainDetailWork, queryWrapper);
+//        UpdateWrapper<EquiMaintainDetailWork> queryWrapper = new UpdateWrapper<>();
+//        queryWrapper.lambda().eq(EquiMaintainDetailWork::getEquiArchNo, equiArchNo);
+//        EquiMaintainDetailWork equiMaintainDetailWork = new EquiMaintainDetailWork().setFilePath(names.toString());
+//        detailService.saveFilePath(equiArchNo,detailId,names.toString());
         return InspectionResp.getMap(null, RepEnum.REP_OK);
     }
 
@@ -281,7 +297,7 @@ public class MainController {
                     "}" )
     })
     @ApiResponse(code = 200, response = EquiMaintainInfo.class, message = "固定返回模型，json字符串表现形式；")
-    public Map<String, Object> insertMaintainInfo(@RequestBody EquiMaintainInfo equiMaintainInfo) {
+    public Map<String, Object> insertMaintainInfo( @RequestBody EquiMaintainInfo equiMaintainInfo) {
         detailService.insertMaintainInfo(equiMaintainInfo);
         log.info("JOSN::::"+equiMaintainInfo.toString());
 
@@ -336,7 +352,7 @@ public class MainController {
      * @return
      * @descrition 工程师 - 历史列表
      */
-    @PostMapping("/getProjectHistoryList")
+    @GetMapping("/getProjectHistoryList")
     @ApiOperation(value = "工程师-历史列表")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "empCode", value = "工号", required = true)
